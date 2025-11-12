@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Foodiee • Order food online</title>
+<meta name="description" content="Foodiee — a front-end-only food delivery demo site." />
+<style>
+  :root{
+    --brand:#e23744;
+    --ink:#1d1d1f;
+    --muted:#6b7280;
+    --bg:#fff7f7;
+    --card:#ffffff;
+    --line:#ececec;
+    --ok:#10b981;
+    --warn:#f59e0b;
+    --danger:#ef4444;
+    --radius:14px;
+    --shadow:0 8px 24px rgba(0,0,0,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;color:var(--ink);background:#fff}
+  a{text-decoration:none;color:inherit}
+  img{display:block;max-width:100%}
+
+  /* Top nav */
+  .nav{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line)}
+  .nav-wrap{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;gap:12px}
+  .brand{font-weight:900;letter-spacing:.3px}
+  .brand span{color:var(--brand)}
+  .nav-actions{display:flex;align-items:center;gap:10px}
+  .btn{padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  .btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .btn.ghost{background:#fff}
+  .btn:active{transform:translateY(1px)}
+
+  /* Hero */
+  .hero{background:var(--bg);padding:40px 16px;border-bottom:1px solid var(--line)}
+  .hero-wrap{max-width:1100px;margin:0 auto;text-align:center}
+  .hero h1{font-size:28px;margin:0 0 16px}
+  .searchbar{display:grid;grid-template-columns:1.2fr 2fr auto;gap:10px;max-width:900px;margin:14px auto 0}
+  .searchbar input, .searchbar select{padding:12px;border:1px solid var(--line);border-radius:12px;font-size:15px}
+  .searchbar button{padding:12px 16px;border:none;border-radius:12px;background:var(--brand);color:#fff;font-weight:600}
+
+  /* Filters */
+  .filters{max-width:1100px;margin:18px auto 0;padding:0 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .chip{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:#333;display:flex;align-items:center;gap:8px;background:#fff}
+  .chip input[type="checkbox"]{transform:scale(1.1)}
+  .chip select{border:none;outline:none;background:#fff}
+
+  /* Grid */
+  .grid{max-width:1100px;margin:18px auto;padding:0 16px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  .card-media{position:relative;height:150px;background:#f5f5f5}
+  .badge{position:absolute;bottom:10px;left:10px;background:#111;color:#fff;padding:6px 8px;border-radius:10px;font-size:12px;opacity:.9}
+  .card-body{padding:12px}
+  .row{display:flex;justify-content:space-between;gap:10px}
+  .title{font-weight:700}
+  .muted{color:var(--muted);font-size:13px}
+  .rating{display:inline-flex;align-items:center;gap:6px;background:#ebfff5;color:#065f46;border-radius:8px;padding:4px 8px;font-size:13px;font-weight:700}
+  .eta{font-weight:600}
+  .card-footer{padding:10px 12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .small{font-size:12px;color:var(--muted)}
+
+  /* Cart */
+  .dock{position:fixed;right:16px;bottom:16px;z-index:60}
+  .fab{display:flex;align-items:center;gap:10px;border-radius:999px;background:#111;color:#fff;padding:12px 16px;box-shadow:var(--shadow);cursor:pointer}
+  .fab .count{background:#fff;color:#111;border-radius:999px;padding:2px 8px;font-weight:800}
+  .cart-panel{position:fixed;right:0;top:0;height:100vh;width:360px;max-width:95vw;background:#fff;border-left:1px solid var(--line);box-shadow:var(--shadow);transform:translateX(110%);transition:.25s all;z-index:70;display:flex;flex-direction:column}
+  .cart-panel.open{transform:translateX(0)}
+  .cart-head{padding:14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .cart-body{padding:12px;overflow:auto;flex:1}
+  .cart-item{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 0;border-bottom:1px dashed var(--line)}
+  .qty{display:flex;align-items:center;gap:8px}
+  .qty button{border:1px solid var(--line);background:#fff;border-radius:8px;width:28px;height:28px;font-weight:800}
+  .cart-foot{border-top:1px solid var(--line);padding:12px;display:grid;gap:8px}
+  .total-row{display:flex;justify-content:space-between;font-weight:800}
+  .checkout{background:var(--brand);color:#fff;border:none;padding:12px;border-radius:12px;font-weight:700;cursor:pointer}
+
+  /* Modal (restaurant detail) */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;place-items:center;z-index:65}
+  .modal.open{display:grid}
+  .sheet{width:min(840px,95vw);max-height:90vh;background:#fff;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+  .sheet-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .sheet-body{padding:12px 16px;overflow:auto}
+  .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .menu-item{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:10px}
+  .menu-item .add{align-self:center}
+  .veg{display:inline-block;width:10px;height:10px;border:2px solid #16a34a;border-radius:2px;margin-right:6px}
+  .nonveg{display:inline-block;width:10px;height:10px;border:2px solid #b91c1c;border-radius:2px;margin-right:6px}
+  .price{font-weight:800}
+
+  /* Footer */
+  footer{margin-top:24px;border-top:1px solid var(--line);background:#fafafa}
+  .foot-wrap{max-width:1100px;margin:0 auto;padding:18px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+  .credit{font-weight:700}
+
+  /* Utilities */
+  .hide{display:none !important}
+  .pill{padding:6px 10px;border-radius:999px;background:#f3f4f6;color:#111;font-size:12px}
+
+  /* Responsive */
+  @media (max-width:980px){ .grid{grid-template-columns:repeat(3,1fr)} }
+  @media (max-width:720px){
+    .searchbar{grid-template-columns:1fr}
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .menu-grid{grid-template-columns:1fr}
+  }
+  @media (max-width:440px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-wrap">
+      <div class="brand">Foodiee <span>• India</span></div>
+      <div class="nav-actions">
+        <button class="btn ghost" id="loginBtn">Log in</button>
+        <button class="btn" id="signupBtn">Sign up</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-wrap">
+      <h1>Discover the best food & drinks near you</h1>
+      <div class="searchbar">
+        <input id="locationInput" placeholder="📍 Enter your location (e.g., Hyderabad)" />
+        <input id="queryInput" placeholder="🔎 Search for restaurant, cuisine or dish" />
+        <button id="searchBtn">Search</button>
+      </div>
+      <div class="filters">
+        <label class="chip"><input type="checkbox" id="vegOnly"> Veg only</label>
+        <label class="chip">Rating
+          <select id="minRating">
+            <option value="0">Any</option>
+            <option value="3.5">3.5+</option>
+            <option value="4.0" selected>4.0+</option>
+            <option value="4.5">4.5+</option>
+          </select>
+        </label>
+        <label class="chip">Max ETA
+          <select id="maxEta">
+            <option value="999">Any</option>
+            <option value="30">30 min</option>
+            <option value="40" selected>40 min</option>
+            <option value="50">50 min</option>
+          </select>
+        </label>
+        <button class="chip" id="clearFilters">Clear</button>
+        <span class="muted" id="resultCount"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- GRID -->
+  <section class="grid" id="grid"></section>
+
+  <!-- CART FLOATING ACTION -->
+  <div class="dock">
+    <div class="fab" id="openCart">
+      🧾 View Cart <span class="count" id="cartCount">0</span>
+    </div>
+  </div>
+
+  <!-- CART PANEL -->
+  <aside class="cart-panel" id="cartPanel" aria-label="Cart panel" aria-hidden="true">
+    <div class="cart-head">
+      <strong>Your Cart</strong>
+      <button class="btn" id="closeCart">Close</button>
+    </div>
+    <div class="cart-body" id="cartItems"></div>
+    <div class="cart-foot">
+      <div class="total-row"><span>Subtotal</span><span id="subtotal">₹0</span></div>
+      <div class="row"><span class="small">Delivery Fee</span><span class="small">₹25</span></div>
+      <div class="total-row"><span>Total</span><span id="grandTotal">₹25</span></div>
+      <button class="checkout" id="checkoutBtn">Place Order</button>
+      <span class="small">* Demo only. No payment collected.</span>
+    </div>
+  </aside>
+
+  <!-- RESTAURANT MODAL -->
+  <div class="modal" id="restModal" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="restTitle">
+      <div class="sheet-head">
+        <div>
+          <div id="restTitle" class="title"></div>
+          <div class="muted" id="restMeta"></div>
+        </div>
+        <button class="btn" id="closeRest">Close</button>
+      </div>
+      <div class="sheet-body">
+        <div class="menu-grid" id="menuGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN / SIGNUP (fake) -->
+  <div class="modal" id="authModal" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="sheet-head">
+        <div class="title">Welcome to Foodiee</div>
+        <button class="btn" id="closeAuth">Close</button>
+      </div>
+      <div class="sheet-body">
+        <div style="display:grid;gap:10px;max-width:420px">
+          <input id="authName" placeholder="Your name" style="padding:12px;border:1px solid var(--line);border-radius:12px">
+          <input id="authEmail" placeholder="Email" style="padding:12px;border:1px solid var(--line);border-radius:12px">
+          <button class="btn primary" id="authSave">Continue</button>
+          <span class="small">Demo only — stores name in localStorage.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="foot-wrap">
+      <div>© <span id="year"></span> Foodiee</div>
+      <div class="credit">Built by: <span style="color:var(--brand)">Katkuri Sai Krishna Reddy</span></div>
+    </div>
+  </footer>
+
+<script>
+/* ---------------------------
+   RESTAURANTS — curated Unsplash queries (professional plated food)
+   50 entries; each uses a focused Unsplash search query with &sig to bias results
+----------------------------*/
+const RESTAURANTS = [
+  { id:'r1', name:'Spice Junction', img:'https://loremflickr.com/1200/800/indian,curry?lock=1', cuisines:['North Indian','Curry'], rating:4.6, eta:30, costForTwo:450, vegOnly:false, menu:[{id:'m101',name:'House Chicken Curry',price:270,veg:false}] },
+  { id:'r2', name:'Urban Tadka', img:'https://loremflickr.com/1200/800/indian,thali?lock=2', cuisines:['Fast Casual','Indian'], rating:4.3, eta:28, costForTwo:380, vegOnly:false, menu:[{id:'m104',name:'Tadka Paneer Bowl',price:220,veg:true}] },
+  { id:'r3', name:'Green Leaf Cafe', img:'https://loremflickr.com/1200/800/salad,healthy?lock=3', cuisines:['Healthy','Salads'], rating:4.7, eta:22, costForTwo:420, vegOnly:true, menu:[{id:'m107',name:'Quinoa Salad',price:240,veg:true}] },
+  { id:'r4', name:'Briyani Bliss', img:'https://loremflickr.com/1200/800/biryani,mughlai?lock=4', cuisines:['Biryani','Mughlai'], rating:4.5, eta:36, costForTwo:520, vegOnly:false, menu:[{id:'m110',name:'Chicken Dum Biryani',price:300,veg:false}] },
+  { id:'r5', name:'Cozy Corner Deli', img:'https://loremflickr.com/1200/800/sandwich,deli?lock=5', cuisines:['Cafe','Sandwiches'], rating:4.2, eta:20, costForTwo:320, vegOnly:false, menu:[{id:'m113',name:'Club Sandwich',price:180,veg:false}] },
+  { id:'r6', name:'Tiffin Tales', img:'https://loremflickr.com/1200/800/dosa,idli?lock=6', cuisines:['South Indian','Breakfast'], rating:4.8, eta:18, costForTwo:260, vegOnly:true, menu:[{id:'m116',name:'Masala Dosa',price:120,veg:true}] },
+  { id:'r7', name:'Kebab Factory', img:'https://loremflickr.com/1200/800/kebab,grill?lock=7', cuisines:['Kebab','Grill'], rating:4.4, eta:34, costForTwo:560, vegOnly:false, menu:[{id:'m119',name:'Chicken Seekh Kebab',price:260,veg:false}] },
+  { id:'r8', name:'Noodle Nook', img:'https://loremflickr.com/1200/800/noodles,asian?lock=8', cuisines:['Asian','Noodles'], rating:4.1, eta:26, costForTwo:340, vegOnly:false, menu:[{id:'m122',name:'Veg Hakka Noodles',price:160,veg:true}] },
+  { id:'r9', name:'Pizzaiolo Street', img:'https://loremflickr.com/1200/800/pizza,italian?lock=9', cuisines:['Italian','Pizza'], rating:4.5, eta:32, costForTwo:480, vegOnly:false, menu:[{id:'m125',name:'Margherita Pizza',price:320,veg:true}] },
+  { id:'r10', name:'Seaside Bites', img:'https://loremflickr.com/1200/800/seafood,grilled?lock=10', cuisines:['Seafood','Grill'], rating:4.3, eta:38, costForTwo:650, vegOnly:false, menu:[{id:'m128',name:'Grilled Prawns',price:360,veg:false}] },
+  { id:'r11', name:'Roll & Bowl', img:'https://loremflickr.com/1200/800/shawarma,roll?lock=11', cuisines:['Fast Food','Bowls'], rating:4.0, eta:24, costForTwo:300, vegOnly:false, menu:[{id:'m131',name:'Chicken Shawarma Roll',price:190,veg:false}] },
+  { id:'r12', name:'Saffron Spoon', img:'https://loremflickr.com/1200/800/roganjosh,indian?lock=12', cuisines:['Fine Dining','Indian'], rating:4.7, eta:40, costForTwo:850, vegOnly:false, menu:[{id:'m134',name:'Rogan Josh',price:420,veg:false}] },
+  { id:'r13', name:'The Burger Loft', img:'https://loremflickr.com/1200/800/burger,fastfood?lock=13', cuisines:['Burgers','Fast Food'], rating:4.2, eta:27, costForTwo:360, vegOnly:false, menu:[{id:'m137',name:'Classic Beef Burger',price:260,veg:false}] },
+  { id:'r14', name:'Momo Magic', img:'https://loremflickr.com/1200/800/momo,dumpling?lock=14', cuisines:['Tibetan','Street Food'], rating:4.4, eta:21, costForTwo:280, vegOnly:false, menu:[{id:'m140',name:'Steamed Chicken Momo',price:160,veg:false}] },
+  { id:'r15', name:'Curry & Crust', img:'https://loremflickr.com/1200/800/curry,pizza,fusion?lock=15', cuisines:['Fusion','Indian'], rating:4.0, eta:33, costForTwo:410, vegOnly:false, menu:[{id:'m143',name:'Butter Chicken Pizza',price:320,veg:false}] },
+  { id:'r16', name:'Desi Dhaba', img:'https://loremflickr.com/1200/800/dal,punjabi?lock=16', cuisines:['Punjabi','Dhaba'], rating:4.5, eta:35, costForTwo:390, vegOnly:false, menu:[{id:'m146',name:'Dal Makhani',price:170,veg:true}] },
+  { id:'r17', name:'Sushi Street', img:'https://loremflickr.com/1200/800/sushi,japanese?lock=17', cuisines:['Japanese','Sushi'], rating:4.6, eta:30, costForTwo:700, vegOnly:false, menu:[{id:'m149',name:'California Roll',price:320,veg:false}] },
+  { id:'r18', name:'The Sweet Spot', img:'https://loremflickr.com/1200/800/cake,dessert?lock=18', cuisines:['Desserts','Bakery'], rating:4.8, eta:19, costForTwo:220, vegOnly:true, menu:[{id:'m152',name:'Chocolate Lava Cake',price:170,veg:true}] },
+  { id:'r19', name:'Wrap & Roll', img:'https://loremflickr.com/1200/800/wrap,paneer?lock=19', cuisines:['Wraps','Fast Food'], rating:4.1, eta:23, costForTwo:300, vegOnly:false, menu:[{id:'m155',name:'Paneer Tikka Wrap',price:160,veg:true}] },
+  { id:'r20', name:'Masala Machan', img:'https://loremflickr.com/1200/800/chettinad,chicken?lock=20', cuisines:['Chettinad','South Indian'], rating:4.7, eta:25, costForTwo:360, vegOnly:false, menu:[{id:'m158',name:'Chettinad Chicken',price:300,veg:false}] },
+  { id:'r21', name:'The Salad Bar', img:'https://loremflickr.com/1200/800/caesarsalad,veggies?lock=21', cuisines:['Salads','Healthy'], rating:4.4, eta:20, costForTwo:340, vegOnly:true, menu:[{id:'m161',name:'Caesar Salad',price:200,veg:true}] },
+  { id:'r22', name:'Chaat House', img:'https://loremflickr.com/1200/800/panipuri,chaat?lock=22', cuisines:['Street Food','Chaat'], rating:4.5, eta:18, costForTwo:260, vegOnly:true, menu:[{id:'m164',name:'Pani Puri',price:120,veg:true}] },
+  { id:'r23', name:'Rice & Spice', img:'https://loremflickr.com/1200/800/thai,basilchicken?lock=23', cuisines:['Asian','Rice'], rating:4.0, eta:29, costForTwo:320, vegOnly:false, menu:[{id:'m167',name:'Thai Basil Chicken',price:260,veg:false}] },
+  { id:'r24', name:'Paneer Palace', img:'https://loremflickr.com/1200/800/paneer,shahi?lock=24', cuisines:['North Indian','Vegetarian'], rating:4.6, eta:32, costForTwo:400, vegOnly:true, menu:[{id:'m170',name:'Shahi Paneer',price:300,veg:true}] },
+  { id:'r25', name:'Kabob Kitchen', img:'https://loremflickr.com/1200/800/kabob,middleeastern?lock=25', cuisines:['Middle Eastern','Grill'], rating:4.4, eta:31, costForTwo:520, vegOnly:false, menu:[{id:'m173',name:'Lamb Kabob Plate',price:360,veg:false}] },
+  { id:'r26', name:'Oven & Hearth', img:'https://loremflickr.com/1200/800/woodfirepizza,bakery?lock=26', cuisines:['Bakery','Pizzeria'], rating:4.5, eta:26, costForTwo:380, vegOnly:false, menu:[{id:'m176',name:'Woodfire Pizza',price:350,veg:false}] },
+  { id:'r27', name:'Pasta Pronto', img:'https://loremflickr.com/1200/800/pasta,arrabbiata?lock=27', cuisines:['Italian','Pasta'], rating:4.3, eta:24, costForTwo:420, vegOnly:false, menu:[{id:'m179',name:'Arrabbiata Penne',price:220,veg:true}] },
+  { id:'r28', name:'Grill & Greens', img:'https://loremflickr.com/1200/800/grilledfish,salmon?lock=28', cuisines:['Grill','Healthy'], rating:4.2, eta:28, costForTwo:460, vegOnly:false, menu:[{id:'m182',name:'Grilled Salmon',price:360,veg:false}] },
+  { id:'r29', name:'Urban Chinese', img:'https://loremflickr.com/1200/800/mapotofu,chinese?lock=29', cuisines:['Chinese','Sichuan'], rating:4.1, eta:27, costForTwo:340, vegOnly:false, menu:[{id:'m185',name:'Mapo Tofu',price:220,veg:true}] },
+  { id:'r30', name:'The Pancake Parlour', img:'https://loremflickr.com/1200/800/pancakes,breakfast?lock=30', cuisines:['Breakfast','Desserts'], rating:4.6, eta:17, costForTwo:260, vegOnly:true, menu:[{id:'m188',name:'Classic Pancakes',price:160,veg:true}] },
+  { id:'r31', name:'Mediterraneo', img:'https://loremflickr.com/1200/800/halloumi,mediterranean?lock=31', cuisines:['Mediterranean','Healthy'], rating:4.4, eta:29, costForTwo:480, vegOnly:false, menu:[{id:'m191',name:'Grilled Halloumi',price:260,veg:true}] },
+  { id:'r32', name:'Dosa Delight', img:'https://loremflickr.com/1200/800/dosa,streetfood?lock=32', cuisines:['South Indian','Street Food'], rating:4.8, eta:16, costForTwo:240, vegOnly:true, menu:[{id:'m194',name:'Masala Dosa',price:110,veg:true}] },
+  { id:'r33', name:'Street BBQ Co.', img:'https://loremflickr.com/1200/800/brisket,bbq?lock=33', cuisines:['BBQ','Grill'], rating:4.3, eta:36, costForTwo:600, vegOnly:false, menu:[{id:'m197',name:'Smoked Brisket',price:420,veg:false}] },
+  { id:'r34', name:'Gourmet Tacos', img:'https://loremflickr.com/1200/800/taco,mexican?lock=34', cuisines:['Mexican','Tacos'], rating:4.2, eta:22, costForTwo:320, vegOnly:false, menu:[{id:'m200',name:'Al Pastor Taco',price:140,veg:false}] },
+  { id:'r35', name:'Herbivore Haven', img:'https://loremflickr.com/1200/800/vegan,buddhabowl?lock=35', cuisines:['Vegan','Healthy'], rating:4.7, eta:20, costForTwo:360, vegOnly:true, menu:[{id:'m203',name:'Vegan Buddha Bowl',price:240,veg:true}] },
+  { id:'r36', name:'The Naan Factory', img:'https://loremflickr.com/1200/800/naan,indianbread?lock=36', cuisines:['Indian','Tandoor'], rating:4.3, eta:30, costForTwo:340, vegOnly:false, menu:[{id:'m206',name:'Butter Naan (2 pc)',price:90,veg:true}] },
+  { id:'r37', name:'Chow Down Bistro', img:'https://loremflickr.com/1200/800/trufflefries,bistro?lock=37', cuisines:['Fusion','Bistro'], rating:4.1, eta:26, costForTwo:400, vegOnly:false, menu:[{id:'m209',name:'Truffle Fries',price:180,veg:true}] },
+  { id:'r38', name:'Bibimbap House', img:'https://loremflickr.com/1200/800/bibimbap,korean?lock=38', cuisines:['Korean','Rice'], rating:4.5, eta:29, costForTwo:460, vegOnly:false, menu:[{id:'m212',name:'Beef Bibimbap',price:320,veg:false}] },
+  { id:'r39', name:'The Spice Route', img:'https://loremflickr.com/1200/800/thaicurry,spicy?lock=39', cuisines:['Pan-Asian','Spicy'], rating:4.2, eta:34, costForTwo:520, vegOnly:false, menu:[{id:'m215',name:'Spicy Thai Curry',price:300,veg:false}] },
+  { id:'r40', name:'Breakfast Bliss', img:'https://loremflickr.com/1200/800/eggsbenedict,breakfast?lock=40', cuisines:['Breakfast','Cafe'], rating:4.6, eta:18, costForTwo:240, vegOnly:true, menu:[{id:'m218',name:'Eggs Benedict',price:220,veg:false}] },
+  { id:'r41', name:'Mumbai Masala', img:'https://loremflickr.com/1200/800/pavbhaji,mumbai?lock=41', cuisines:['Maharashtrian','Street Food'], rating:4.4, eta:22, costForTwo:300, vegOnly:false, menu:[{id:'m221',name:'Pav Bhaji',price:160,veg:true}] },
+  { id:'r42', name:'Korean Corner', img:'https://loremflickr.com/1200/800/koreanbbq,kimchi?lock=42', cuisines:['Korean','BBQ'], rating:4.3, eta:30, costForTwo:480, vegOnly:false, menu:[{id:'m224',name:'Korean BBQ Platter',price:420,veg:false}] },
+  { id:'r43', name:'Veggie Vibes', img:'https://loremflickr.com/1200/800/vegsandwich,cafe?lock=43', cuisines:['Vegetarian','Cafe'], rating:4.5, eta:21, costForTwo:300, vegOnly:true, menu:[{id:'m227',name:'Grilled Veg Sandwich',price:160,veg:true}] },
+  { id:'r44', name:'The Seafood Shack', img:'https://loremflickr.com/1200/800/crab,seafood?lock=44', cuisines:['Seafood','Coastal'], rating:4.2, eta:36, costForTwo:620, vegOnly:false, menu:[{id:'m230',name:'Crab Masala',price:420,veg:false}] },
+  { id:'r45', name:'Bistro 47', img:'https://loremflickr.com/1200/800/steak,bistro?lock=45', cuisines:['Bistro','Continental'], rating:4.0, eta:28, costForTwo:420, vegOnly:false, menu:[{id:'m233',name:'Grilled Steak',price:420,veg:false}] },
+  { id:'r46', name:'Spice Bazaar', img:'https://loremflickr.com/1200/800/kathiroll,indian?lock=46', cuisines:['Indian','Street Food'], rating:4.5, eta:31, costForTwo:340, vegOnly:false, menu:[{id:'m236',name:'Kathi Roll',price:160,veg:false}] },
+  { id:'r47', name:'Sizzle & Smoke', img:'https://loremflickr.com/1200/800/ribeye,steakhouse?lock=47', cuisines:['Grill','Steakhouse'], rating:4.4, eta:37, costForTwo:700, vegOnly:false, menu:[{id:'m239',name:'Ribeye Steak',price:520,veg:false}] },
+  { id:'r48', name:'The Dumpling Den', img:'https://loremflickr.com/1200/800/dumpling,dimsum?lock=48', cuisines:['Chinese','Dim Sum'], rating:4.3, eta:24, costForTwo:300, vegOnly:false, menu:[{id:'m242',name:'Pork Dumplings',price:180,veg:false}] },
+  { id:'r49', name:'Tea & Tales', img:'https://loremflickr.com/1200/800/masalachai,tea?lock=49', cuisines:['Cafe','Tea'], rating:4.6, eta:18, costForTwo:220, vegOnly:true, menu:[{id:'m245',name:'Masala Chai',price:60,veg:true}] },
+  { id:'r50', name:'Retro Diner', img:'https://loremflickr.com/1200/800/pancakestack,diner?lock=50', cuisines:['American','Diner'], rating:4.1, eta:25, costForTwo:340, vegOnly:false, menu:[{id:'m248',name:'Classic Pancake Stack',price:180,veg:true}] }
+];
+
+/* ---------------------------
+   STATE
+----------------------------*/
+const $ = (s,scope=document)=>scope.querySelector(s);
+const $$ = (s,scope=document)=>[...scope.querySelectorAll(s)];
+const state = {
+  query: '',
+  location: '',
+  vegOnly: false,
+  minRating: 4.0,
+  maxEta: 40,
+  cart: load('foodiee_cart', []),
+  user: load('foodiee_user', null),
+};
+function save(key,val){ localStorage.setItem(key, JSON.stringify(val)); }
+function load(key,fallback){ try{ return JSON.parse(localStorage.getItem(key)) ?? fallback } catch { return fallback } }
+
+/* ---------------------------
+   RENDER: RESTAURANT GRID (DOM-based with img.onerror fallbacks)
+----------------------------*/
+const grid = $('#grid');
+const resultCount = $('#resultCount');
+function renderGrid(){
+  const {query, vegOnly, minRating, maxEta} = state;
+  const q = (query||'').trim().toLowerCase();
+  let list = RESTAURANTS.filter(r=>{
+    const matchQ = !q || r.name.toLowerCase().includes(q) || r.cuisines.join(',').toLowerCase().includes(q);
+    const matchVeg = !vegOnly || r.vegOnly;
+    const matchRating = r.rating >= +minRating;
+    const matchEta = r.eta <= +maxEta;
+    return matchQ && matchVeg && matchRating && matchEta;
+  });
+
+  resultCount.textContent = `${list.length} result${list.length!==1?'s':''}`;
+  grid.innerHTML = '';
+
+  list.forEach(r => {
+    const article = document.createElement('article');
+    article.className = 'card';
+
+    const media = document.createElement('div');
+    media.className = 'card-media';
+
+    const img = document.createElement('img');
+    img.alt = r.name;
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'cover';
+    img.loading = 'lazy';
+
+    // primary src (curated Unsplash query)
+    img.src = r.img;
+
+    const fallbackPicsum = `https://picsum.photos/seed/${encodeURIComponent(r.id)}/1200/800`;
+
+    img.onerror = function () {
+      if (!this.dataset.attempt) {
+        this.dataset.attempt = '1';
+        this.src = fallbackPicsum;
+      } else {
+        this.onerror = null;
+        this.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="100%" height="100%" fill="#f5f5f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#bbb" font-family="Arial" font-size="36">Image unavailable</text></svg>`
+        );
+      }
+    };
+
+    media.appendChild(img);
+
+    const badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = r.cuisines.slice(0,2).join(' • ');
+    media.appendChild(badge);
+
+    const body = document.createElement('div');
+    body.className = 'card-body';
+    body.innerHTML = `
+      <div class="row">
+        <div>
+          <div class="title">${r.name}</div>
+          <div class="muted">${r.cuisines.join(', ')}</div>
+        </div>
+        <div class="rating">★ ${r.rating.toFixed(1)}</div>
+      </div>
+    `;
+
+    const footer = document.createElement('div');
+    footer.className = 'card-footer';
+    footer.innerHTML = `<div class="small">₹${r.costForTwo} for two</div><div class="eta">${r.eta} mins</div>`;
+
+    const actions = document.createElement('div');
+    actions.style.padding = '12px';
+    actions.style.display = 'flex';
+    actions.style.gap = '8px';
+
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'btn';
+    viewBtn.textContent = 'View menu';
+    viewBtn.addEventListener('click', ()=>openRestaurant(r.id));
+
+    const quickBtn = document.createElement('button');
+    quickBtn.className = 'btn primary';
+    quickBtn.textContent = 'Quick add';
+    quickBtn.addEventListener('click', ()=>quickAdd(r.id));
+
+    actions.appendChild(viewBtn);
+    actions.appendChild(quickBtn);
+
+    article.appendChild(media);
+    article.appendChild(body);
+    article.appendChild(footer);
+    article.appendChild(actions);
+
+    grid.appendChild(article);
+  });
+}
+
+/* ---------------------------
+   RESTAURANT MODAL + MENU
+----------------------------*/
+const restModal = $('#restModal');
+const menuGrid = $('#menuGrid');
+const restTitle = $('#restTitle');
+const restMeta = $('#restMeta');
+$('#closeRest').onclick = ()=>restModal.classList.remove('open');
+
+function openRestaurant(id){
+  const r = RESTAURANTS.find(x=>x.id===id);
+  if(!r) return;
+  restTitle.textContent = r.name;
+  restMeta.textContent = `${r.cuisines.join(' • ')} • ★ ${r.rating} • ${r.eta} mins • ₹${r.costForTwo} for two`;
+  menuGrid.innerHTML = r.menu.map(item=>`
+    <div class="menu-item">
+      <div>
+        <div class="${item.veg?'veg':'nonveg'}"></div>
+        <strong>${item.name}</strong>
+        <div class="muted" style="margin:6px 0">${item.desc||''}</div>
+        <div class="price">₹${item.price}</div>
+      </div>
+      <div class="add">
+        <button class="btn" data-add="${r.id}:${item.id}">Add</button>
+      </div>
+    </div>
+  `).join('');
+  restModal.classList.add('open');
+  $$('[data-add]').forEach(btn=>btn.addEventListener('click',()=>{ const [rid, mid] = btn.dataset.add.split(':'); addToCart(rid, mid, 1); }));
+}
+
+function quickAdd(id){
+  const r = RESTAURANTS.find(x=>x.id===id);
+  if(!r || !r.menu.length) return;
+  addToCart(r.id, r.menu[0].id, 1);
+}
+
+/* ---------------------------
+   CART
+----------------------------*/
+const cartPanel = $('#cartPanel');
+const cartCount = $('#cartCount');
+const cartItems = $('#cartItems');
+const subtotalEl = $('#subtotal');
+const grandTotalEl = $('#grandTotal');
+
+$('#openCart').onclick = ()=>{ cartPanel.classList.add('open'); cartPanel.setAttribute('aria-hidden','false') };
+$('#closeCart').onclick = ()=>{ cartPanel.classList.remove('open'); cartPanel.setAttribute('aria-hidden','true') };
+
+function cartKey(rid, mid){ return `${rid}:${mid}`; }
+
+function addToCart(rid, mid, qty=1){
+  const r = RESTAURANTS.find(x=>x.id===rid);
+  const m = r?.menu.find(x=>x.id===mid);
+  if(!m) return;
+  const key = cartKey(rid, mid);
+  const found = state.cart.find(x=>x.key===key);
+  if(found){ found.qty += qty; } else {
+    state.cart.push({ key, rid, mid, name:m.name, price:m.price, qty:qty, rest:r.name });
+  }
+  persistCart();
+  toast(`${m.name} added to cart`);
+}
+
+function changeQty(key, delta){
+  const row = state.cart.find(x=>x.key===key);
+  if(!row) return;
+  row.qty += delta;
+  if(row.qty<=0){ state.cart = state.cart.filter(x=>x.key!==key); }
+  persistCart();
+}
+
+function persistCart(){
+  save('foodiee_cart', state.cart);
+  renderCart();
+}
+
+function renderCart(){
+  const items = state.cart;
+  cartCount.textContent = items.reduce((a,c)=>a+c.qty,0);
+  if(!items.length){
+    cartItems.innerHTML = `<div class="muted">Your cart is empty.</div>`;
+    subtotalEl.textContent = '₹0';
+    grandTotalEl.textContent = '₹25';
+    return;
+  }
+  cartItems.innerHTML = items.map(it=>`
+    <div class="cart-item">
+      <div>
+        <div><strong>${it.name}</strong> <span class="small">(${it.rest})</span></div>
+        <div class="small">₹${it.price} each</div>
+      </div>
+      <div class="qty">
+        <button data-dec="${it.key}">−</button>
+        <span>${it.qty}</span>
+        <button data-inc="${it.key}">+</button>
+      </div>
+    </div>
+  `).join('');
+  $$('[data-dec]').forEach(b=>b.addEventListener('click',()=>changeQty(b.dataset.dec,-1)));
+  $$('[data-inc]').forEach(b=>b.addEventListener('click',()=>changeQty(b.dataset.inc,+1)));
+  const subtotal = items.reduce((a,c)=>a + c.price*c.qty,0);
+  subtotalEl.textContent = `₹${subtotal}`;
+  const delivery = items.length ? 25 : 0;
+  grandTotalEl.textContent = `₹${subtotal + delivery}`;
+}
+
+$('#checkoutBtn').onclick = ()=>{ if(!state.cart.length) return alert('Your cart is empty.'); const name = state.user?.name || 'Guest'; alert(`Thanks ${name}! Your Foodiee order is placed.\n(Front-end demo only)`); state.cart = []; persistCart(); cartPanel.classList.remove('open'); };
+
+/* ---------------------------
+   AUTH (demo)
+----------------------------*/
+const authModal = $('#authModal');
+const authSave = $('#authSave');
+const authName = $('#authName');
+const authEmail = $('#authEmail');
+$('#loginBtn').onclick = ()=>authModal.classList.add('open');
+$('#signupBtn').onclick = ()=>authModal.classList.add('open');
+$('#closeAuth').onclick = ()=>authModal.classList.remove('open');
+
+authSave.onclick = ()=>{ const name = authName.value.trim(); const email = authEmail.value.trim(); if(!name || !email) return alert('Enter name and email'); state.user = {name, email}; save('foodiee_user', state.user); authModal.classList.remove('open'); toast(`Welcome, ${name}!`); };
+
+/* ---------------------------
+   SEARCH + FILTERS
+----------------------------*/
+$('#searchBtn').onclick = ()=>{ state.location = $('#locationInput').value; state.query = $('#queryInput').value; renderGrid(); };
+$('#vegOnly').onchange = (e)=>{ state.vegOnly = e.target.checked; renderGrid(); };
+$('#minRating').onchange = (e)=>{ state.minRating = +e.target.value; renderGrid(); };
+$('#maxEta').onchange = (e)=>{ state.maxEta = +e.target.value; renderGrid(); };
+$('#clearFilters').onclick = ()=>{ $('#vegOnly').checked = false; $('#minRating').value = '0'; $('#maxEta').value = '999'; state.vegOnly = false; state.minRating = 0; state.maxEta = 999; state.query=''; $('#queryInput').value=''; renderGrid(); };
+
+/* ---------------------------
+   TOAST (tiny)
+----------------------------*/
+let toastTimer=null;
+function toast(msg){
+  let t = $('#toast');
+  if(!t){
+    t = document.createElement('div');
+    t.id='toast';
+    Object.assign(t.style, {
+      position:'fixed', left:'50%', bottom:'24px', transform:'translateX(-50%)',
+      background:'#111', color:'#fff', padding:'10px 14px', borderRadius:'12px',
+      boxShadow:'var(--shadow)', zIndex:80, maxWidth:'90vw', textAlign:'center'
+    });
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity='1';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.style.opacity='0', 1600);
+}
+
+/* ---------------------------
+   INIT
+----------------------------*/
+$('#year').textContent = new Date().getFullYear();
+if(state.user){ toast(`Hi ${state.user.name}!`); }
+renderGrid();
+renderCart();
+
+// Close modals on overlay click
+[restModal, authModal].forEach(m=>{ m.addEventListener('click',(e)=>{ if(e.target===m) m.classList.remove('open'); }); });
+</script>
+</body>
+</html>
